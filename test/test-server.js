@@ -1,25 +1,30 @@
-'use strict';
+
 //env variable is set to test
 process.env.NODE_ENV = 'test';
 //Importing the packages
 var chai = require('chai');
 var chaiHttp = require('chai-http');
 var mongoose = require("mongoose");
+
 //Require the server and db
 var server = require('../server.js');
 var User        = require('../app/models/login');
 var models         = require('../app/models/weather');
+var Insurance = require('../app/models/insured');
+
 //Define should
 var should = chai.should();
 //Define Chai to use chaiHTTP
 chai.use(chaiHttp);
 //Starting test block1-Weather API
+
+
 describe('Weather API', function() {
-                              this.timeout(3000);
+                              this.timeout(4000);
                               //Before each test,insert the data into the db
                               beforeEach(function(done){
                                     //Weather Db Insertion
-                                    var weather = new models.Weather({
+                              var weather = new models.Weather({
                                         city : {
                                                   id:10,
                                                   name:'Chennai',
@@ -57,10 +62,10 @@ describe('Weather API', function() {
      it('should retrieve the amount on /quote POST', function(done) {
                      chai.request(server)
                             .post('/api/quote')
-                            //*********//
+                            //*********/
                             //Modify the 'date' and 'time' parameters with respect to current date and time.
                             //********//
-                            .send({'source': 'Trivandrum','destination': 'Mumbai','persons':3,'date':'2016-10-18','time':'21:00:00'})
+                           .send({'source': 'Trivandrum','destination': 'Mumbai','persons':3,'date':'2016-10-21','time':'21:00:00'})
                             .end(function(err, res){
                                         res.should.have.status(200);
                                         res.should.be.json;
@@ -70,7 +75,7 @@ describe('Weather API', function() {
                                         res.body.should.have.property('total');
                                         res.body.success.should.equal(true);
                                         res.body.message.should.equal('Total Quote');
-                                        //********//
+                                        //********/
                                         //The value of the response property 'total' varies based on weather condition.
                                         //Testing fails due to the variation between actual and expected values.
                                         //********//
@@ -119,11 +124,13 @@ describe('Registration & Login', function() {
                                      res.body.should.have.property('token');
                                      res.body.success.should.equal(true);
                                      res.body.message.should.equal('User has been created');
+                                     //token = res.body.token;
+                                     //console.log(token);
                                      done();
                    });
   });
   //Test the /login POST route
-  it('should add a SINGLE user on /login POST', function(done) {
+  it('should login on /login POST', function(done) {
            chai.request(server)
                    .post('/api/login')
                    .send({'username': 'sample','password':'password'})
@@ -139,5 +146,106 @@ describe('Registration & Login', function() {
                                     done();
                   });
  });
+
+});
+
+
+//Starting test block2-Insurance
+describe('Insurance', function() {
+           //Define variable for storing token
+           var token;
+           // runs after all tests in this block
+           after(function(done){
+                User.collection.drop();
+                done();
+           });
+           //Before each test,insert the data into the db
+           beforeEach(function(done){
+
+                 var insurance = new Insurance({
+
+                    source:'Trivandrum',
+                    destination:'Mumbai',
+                    persons: 3,
+                    travelDate:'2016-10-20',
+                    travelTime:'21:00:00',
+                    name:'sample',
+                    insured:true
+                });
+                insurance.save(function(err) {
+
+                });
+                done();
+          });
+          //After each test,empty the db.
+          afterEach(function(done){
+                Insurance.collection.drop();
+                done();
+          });
+
+         //Test the /signup POST route to retrieve token
+         it('should retrieve token on /signup POST request', function(done) {
+
+                chai.request(server)
+                            .post('/api/signup')
+                            .send({'name':'test','username':'test','password':'pwd','email':'test@gmail.com','dob':'11/20/2014','country':'India','gender':'male'})
+                            .end(function(err, res){
+                                   res.should.have.status(200);
+                                   res.should.be.json;
+                                   res.body.should.be.a('object');
+                                   res.body.should.have.property('token');
+                                   token = res.body.token;//Assign token to a variable
+                                   done();
+                 });
+
+         });
+        //Test the /insured POST route
+        it('Create insurance on /insured POST', function(done) {
+
+                  chai.request(server)
+                             .post('/api/insured')
+                             .set('token',token)
+                             .send({'source': 'Trivandrum','destination': 'Mumbai','persons':3,'date':'2016-10-20','time':'21:00:00','name':'sample','insured':'true'})
+                             .end(function(err, res){
+
+                                          res.should.have.status(200);
+                                          res.should.be.json;
+                                          res.body.should.be.a('object');
+                                          res.body.should.have.property('success');
+                                          res.body.should.have.property('message');
+                                          res.body.success.should.equal(true);
+                                          res.body.message.should.equal('insurance has been created');
+                                          done();
+                             });
+       });
+       //Test the /insured GET route
+       it('should list insurance on /insured GET', function(done) {
+
+               chai.request(server)
+                           .get('/api/insured')
+                           .set('token',token)
+                           .end(function(err, res){
+                           res.should.have.status(200);
+                           res.should.be.json;
+                           res.body.should.be.a('array');
+                           res.body[0].should.have.property('source');
+                           res.body[0].should.have.property('destination');
+                           res.body[0].should.have.property('persons');
+                           res.body[0].should.have.property('travelDate');
+                           res.body[0].should.have.property('travelTime');
+                           res.body[0].should.have.property('name');
+                           res.body[0].should.have.property('insured');
+                           res.body[0].source.should.equal('Trivandrum');
+                           res.body[0].destination.should.equal('Mumbai');
+                           res.body[0].persons.should.equal('3');
+                           res.body[0].travelDate.should.equal('2016-10-20');
+                           res.body[0].travelTime.should.equal('21:00:00');
+                           res.body[0].name.should.equal('sample');
+                           res.body[0].insured.should.equal('true');
+                           done();
+                           });
+      });
+
+
 
 });

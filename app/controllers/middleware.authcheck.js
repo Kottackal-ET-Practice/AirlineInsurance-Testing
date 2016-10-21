@@ -11,7 +11,7 @@ var secretKey = config.secretKey;
 exports.authenticationCheck = function (req, res, next) {
 
     // var token = req.body.token || req.params.token || req.query.token || req.headers['x-access-token'];
-    var token = req.query['x-access-token'] || req.headers['x-access-token'];
+   var token = req.query['token'] || req.headers['token'];
 
     // check if token exist
     if (token) {

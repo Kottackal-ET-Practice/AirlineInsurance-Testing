@@ -28,7 +28,7 @@ A POST request is made to the **'/signup'** endpoint and then checked that the r
 
  1. should return 200 HTTP status code.
 
- 2. should be an array.
+ 2. should be an object.
 
  3. should return as json
 
@@ -40,13 +40,53 @@ A POST request is made to the **'/login'** endpoint and then checked that the re
 
  1. should return 200 HTTP status code.
 
- 2. should be an array.
+ 2. should be an object.
 
  3. should return as json
 
  4. body properties should be success,message,token.
 
  5. body properties values as required.
+
+##Testing -Insurance
+
+A POST request is made to the **'/signup'** endpoint and then checked that the response contains the following assertions.
+
+ 1. should return 200 HTTP status code.
+
+ 2. should be an object.
+
+ 3. should return as json
+
+ 4. body property should be token.
+
+ 5. Assign the body property value to a variable 'token'.
+
+A POST request is made to the **'/insured'** endpoint and then checked that the response contains the following assertions.
+
+ 1. should return 200 HTTP status code.
+
+ 2. should be an object.
+
+ 3. should return as json
+
+ 4. body properties should be success,message.
+
+ 5. body properties values as required.
+
+A GET request is made to the **'/insured'** endpoint and then checked that the response contains the following assertions.
+
+ 1. should return 200 HTTP status code.
+
+ 2. should be an array.
+
+ 3. should return as json.
+
+ 4. body properties should be source,destination,persons,date,time,name,insured.
+
+ 5. body properties values as required.
+
+
 
 Run the test by the command **'mocha'** in command prompt.It will display the db defined for testing.If the test is passed,it returns pass message.
 ######NOTE :-
